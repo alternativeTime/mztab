@@ -1,0 +1,113 @@
+
+
+
+---
+
+
+# jmzTab Core Model #
+
+jmzTab can read, write and convert mzTab files. jmzTab is free, open-source software written in Java.
+
+![http://mztab.googlecode.com/svn/wiki/images/jmztab-uml.png](http://mztab.googlecode.com/svn/wiki/images/jmztab-uml.png)
+
+As shown in the figure, MZTabFile class is the central entry point to manage the internal relationships among the different sections in the file. The [MZTabFile](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/MZTabFile.java) class contains three key components:
+  * **[Metadata](http://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/Metadata.java)**: a mandatory metamodel which provides the definitions contained in the dataset reported in the mzTab file;
+  * **[MZTabColumnFactory](http://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/MZTabColumnFactory.java)**: a factory class that can be used to generate stable **[MZTabColumn](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/MZTabColumn.java)** elements, and to add dynamically different optional columns, such as **[AbundanceColumn](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/AbundanceColumn.java)**, **[OptionColumn](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/OptionColumn.java)** and **[CVParamOptionColumn](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/CVParamOptionColumn.java)**. The Metadata and MZTabColumnFactory work together to build the framework for the MZTabFile class;
+  * **Consistency constraints** among different sections of the model. Thus, a couple of convenient methods are provided to keep these constraints. For example, MZTabFile class support iterative modify ms\_run, sample, study variable, and assay identification number, maintain the consistency between the Metadata section and related abundance columns header; and moves corresponding data values when user modify the position of optional columns. These methods are very useful to overcome the identification confliction when user wants to merge multiple MZTabFile models together.
+
+
+---
+
+
+# API Tutorial #
+
+#We provide a couple of typical demo classes, which are stored in [test](http://code.google.com/p/mztab/source/browse/#svn%2Fjmztab%2Ftrunk%2Fsrc%2Ftest%2Fjava%2Fuk%2Fac%2Febi%2Fpride%2Fjmztab) directory.
+
+## Create Metadata and Fill Data ##
+
+The Metadata and MZTabColumnFactory constitute the framework for the MZTabFile class. Here, we provide a couple of demo classes to introduce how to generate a metadata, different types of section header lines by using the column factory, and how to fill data into a MZTabFile model.
+
+  * [Create Metadata](jmzTab_metadata.md) : Create complex metadata, which data coming from section 6.2 (Metadata) in specification. [MetadataRun](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/test/java/uk/ac/ebi/pride/jmztab/model/MetadataRun.java) provide the concrete implementation.
+  * [Create Header and Fill Data](jmzTab_column.md) : Create Protein/Peptide/PSM/SmallMolecule header line and fill data.
+  * **[ConvertSmallMolecule](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/test/java/uk/ac/ebi/pride/jmztab/model/ConvertSmallMolecule.java)** : A typical demo to create MZTabFile manually step by step. In this demo, we combine the [Create Metadata](jmzTab_metadata.md) and [Create Header and Fill Data](jmzTab_column.md) functions together, and generate a MZTabFile including metadata, small molecule headers and one small molecule records.
+
+## Convert to MZTabFile ##
+
+For users who would like to convert their data to the mzTab format. Here, we provide a couple of demo classes to introduce how to generate a MZTabFile model by extending [ConvertProvider](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-util/src/main/java/uk/ac/ebi/pride/jmztab/utils/convert/ConvertProvider.java) class. [MZTabUtils](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/MZTabUtils.java) play a very important role during translate the String object into mzTab objects, such as [Modification](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/Modification.java), [SplitList](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/SplitList.java), [MZBoolean](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/MZBoolean.java), [Param](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/Param.java), [CVParam](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-model/src/main/java/uk/ac/ebi/pride/jmztab/model/CVParam.java) and so on. In the following examples, we try to use a different way: one is to construct the mzTab objects manually. Another one is to parse the user input string by calling methods in MZTabUtils. Users can compare them, and choose the best way to convert their data into the mzTab model.
+
+  * [ConvertSilacExperiment](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-util/src/test/java/uk/ac/ebi/pride/jmztab/model/ConvertSilacExperiment.java): This example is a SILAC experiment with quantification on 2 study variables (control/treatment), 3+3 assays (replicates) reported, identifications reported. In the demo, we show how to create metadata, the protein header line, one protein record, one PSM header line, and one PSM record by manual.
+  * [ConvertPeptideSQ](https://code.google.com/p/mztab/source/browse/jmztab/trunk/jmztab-util/src/test/java/uk/ac/ebi/pride/jmztab/model/ConvertPeptideSQ.java): A minimal "Summary Quantification report" experiment, quantification on 2 study variables (control/treatment), no assays (replicates) reported, no identifications reported. In this demo, we show how to generate metadata, peptide header line, and one peptide record by using a couple parse functions in MZTabUtils.
+
+
+---
+
+
+# Getting jmzTab #
+
+For a list of changes in the latest version of jmzTab see the [ReleaseNotes](ReleaseNotes.md).
+
+## SVN ##
+
+The **latest version** of jmzTab can always be found in the SVN at http://code.google.com/p/mztab/source/browse/#svn%2Fjmztab%2Ftrunk.
+
+To check out the latest version of jmzTab using SVN use:
+
+```xml
+
+# Non-members may check out a read-only working copy anonymously over HTTP.
+svn checkout http://mztab.googlecode.com/svn/jmztab/trunk jmztab-read-only
+```
+
+## Maven ##
+
+The jmzTab library can easily be used **in Maven projects**. You can include the following snippets in your Maven pom file.
+
+For parsing and writing mzTab
+
+```
+  <properties>
+          <jmztab.version>3.0.2</jmztab.version>
+  </properties>
+
+        <dependency>
+            <groupId>uk.ac.ebi.pride</groupId>
+            <artifactId>jmztab-modular-model</artifactId>
+            <version>${jmztab.version}</version>
+            <!-- based on mzTab specification version 1.0 -->
+        </dependency>
+        <dependency>
+            <groupId>uk.ac.ebi.pride</groupId>
+            <artifactId>jmztab-modular-util</artifactId>
+            <version>${jmztab.version}</version>
+            <!-- based on mzTab specification version 1.0 -->
+        </dependency>
+```
+
+For converting to mzTab
+
+```
+  <properties>
+          <jmztab.version>3.0.2</jmztab.version>
+  </properties>
+
+        <dependency>
+            <groupId>uk.ac.ebi.pride</groupId>
+            <artifactId>jmztab-modular-converters</artifactId>
+            <version>${jmztab.version}</version>
+            <!-- based on mzTab specification version 1.0 -->
+        </dependency>
+```
+
+The jmzTab library can currently only be found in the [EBI](http://www.ebi.ac.uk)'s **maven repository**:
+
+```
+<repository>
+    <id>nexus-ebi-repo</id>
+    <name>The EBI internal repository</name>
+    <url>http://www.ebi.ac.uk/intact/maven/nexus/content/repositories/ebi-repo/</url>
+    <releases/>
+    <snapshots>
+        <enabled>false</enabled>
+    </snapshots>
+</repository>
+```
